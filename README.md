@@ -1,5 +1,5 @@
 Steps to install the repo
-```
+```shell
 git clone https://github.com/JZhou3083/Autoscraper.git
 python -m venv venv
 venv\Scripts\activate
