@@ -1,2 +1,10 @@
+<<<<<<< HEAD
 # output 
 *.xlsx
+=======
+# output
+*.xlsx
+
+#virtual
+venv
+>>>>>>> 1250b801312d721592e6b2b2d667d624645ad862
