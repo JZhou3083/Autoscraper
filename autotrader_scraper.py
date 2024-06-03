@@ -7,9 +7,9 @@ Set your criteria and cars makes/models.
 
 Data is then output to an Excel file in the same directory.
 
-Running Chrome Version 125.0.6422.142 and using Stable Win64 ChromeDriver from:
+Running Chrome Version 119.0.6045.106 and using Stable Win64 ChromeDriver from:
 https://googlechromelabs.github.io/chrome-for-testing/
-https://storage.googleapis.com/chrome-for-testing-public/125.0.6422.141/win64/chromedriver-win64.zip
+https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/119.0.6045.105/win64/chromedriver-win64.zip
 """
 import os
 import re
@@ -21,49 +21,33 @@ from bs4 import BeautifulSoup
 from selenium import webdriver  
 from selenium.webdriver.common.keys import Keys  
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 criteria = {
-    "postcode": "CV3 4LF",
-    "radius": "20", # 'National', else: '1, 5, 10, 15,20...55,60,70,...100,200' in unit of miles
-    "year_from": "2010",
-    "year_to": "2014",
-    "price_from": "3000",
-    "price_to": "10000",
+    "postcode": "cv31 3af",
+    "radius": "50",
+    "year_from": "",
+    "year_to": "",
+    "price_from": "",
+    "price_to": "",
 }
 
 
 cars = [
-
-    # {
-    #     "make": "Toyota",
-    #     "model": "Yaris"
-    # },
-    # {
-    #      "make": "Honda",
-    #      "model": "Jazz"
-    # },
-    # {
-    #      "make": "Suzuki",
-    #      "model": "Swift"
-    # },
     {
-         "make": "Mazda",
-         "model": "Mazda2"
+         "make": "Land Rover",
+         "model": "Discovery"
     }
-    # ,
-    #     {
-    #     "make": "Land Rover",
-    #     "model": ""
-    # }
 ]
-    
-
 
 
 def scrape_autotrader(cars, criteria):
     chrome_options = Options()
     chrome_options.add_argument("_tt_enable_cookie=1")
-    driver = webdriver.Chrome()
+    # chrome_options.add_argument("--headless")
+    driver = webdriver.Chrome(options = chrome_options)
     data = []
 
     for car in cars:
@@ -73,37 +57,45 @@ def scrape_autotrader(cars, criteria):
         # =on&make=Honda&model=Jazz&postcode=LS12AD&radius=10&sort=relevance&year-from=2011&year-to=2015
         if ' ' in car['make']: car['make'] = car['make'].replace(' ', '%20')
         if ' ' in car['model']: car['model'] = car['model'].replace(' ', '%20')
+        if ' ' in criteria['postcode']: criteria['postcode'] = criteria['postcode'].replace(' ', '%20')
         url = "https://www.autotrader.co.uk/car-search?" + \
             "advertising-location=at_cars&" + \
             f"make={car['make']}&" + \
             f"model={car['model']}&" + \
             f"postcode={criteria['postcode']}&" + \
-            f"radius={criteria['radius']}&"+ \
-            "sort=relevance&" + \
-            f"price-from={criteria['price_from']}&" + \
-            f"price-to={criteria['price_to']}"
-        print(f"Looking for :{url}")
+            f"radius={criteria['radius']}&" + \
+            "sort=price" 
+        print(f"Looking for : {url}")
         driver.get(url)
 
         print(f"Searching for {car['make']} {car['model']}...")
 
-        time.sleep(1) 
+        time.sleep(5) 
 
         source = driver.page_source
         content = BeautifulSoup(source, "html.parser")
 
-        try:
-            number_of_pages= content.find("p", string = re.compile(r'Page \d{1,2} of \d{1,2}')).text[-1]
-        except:
-            print("No results found.")
-            continue 
+        # Find the paragraph containing the page information
+        page_info = content.find("p", string=re.compile(r'Page \d{1,2} of \d{1,2}'))
 
+        # Extract the total number of pages using a capturing group
+        if page_info:
+            match = re.search(r'Page \d{1,2} of (\d{1,2})', page_info.text)
+            if match:
+                number_of_pages = int(match.group(1))
+            else:
+                print("No match found.")
+        else:
+            print("No page information found.")
+            continue
+        
+        
         print(f"There are {number_of_pages} pages in total.")
 
         for i in range(int(number_of_pages)):
             driver.get(url + f"&page={str(i + 1)}")
             
-            time.sleep(1)
+            time.sleep(5)
             page_source = driver.page_source
             content = BeautifulSoup(page_source, "html.parser")
 
@@ -205,8 +197,8 @@ def output_data_to_excel(data, criteria):
         "transmission",
         "fuel",
     ]]
-
-    df = df[df["price"] < int(criteria["price_to"])]
+    if criteria["price_to"]:
+        df = df[df["price"] < int(criteria["price_to"])]
 
     df = df.sort_values(by="distance", ascending=True)
 
@@ -251,4 +243,4 @@ if __name__ == "__main__":
     data = scrape_autotrader(cars, criteria)
     output_data_to_excel(data, criteria)
 
-    # os.system("start EXCEL.EXE cars.xlsx")
+    os.system("start EXCEL.EXE cars.xlsx")
