@@ -1,3 +1,4 @@
 {
-    "python.REPL.enableREPLSmartSend": false
+    "python.REPL.enableREPLSmartSend": false,
+    "python.pythonPath": "C:\\Program Files\\Python\\Python39\\python.exe"
 }
