@@ -1,5 +1,15 @@
 # output 
-*.xlsx
+output
 
 # vscode
 .vscode 
+
+# venv
+.venv
+
+# pycache
+__pycache__
+
+# pyproject.toml
+pyproject.toml
+
